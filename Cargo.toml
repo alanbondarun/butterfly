@@ -1,5 +1,5 @@
 [package]
-name = "rust-template"
+name = "butterfly-rs"
 version = "0.1.0"
 authors = ["alanb <efik722life@gmail.com>"]
 edition = "2018"
