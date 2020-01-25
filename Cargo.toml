@@ -5,4 +5,5 @@ authors = ["alanb <efik722life@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-tokio = { version = "0.2.10", features = ["rt-core", "rt-threaded"] }
+hyper = "0.13.1"
+tokio = { version = "0.2.10", features = ["full"] }
