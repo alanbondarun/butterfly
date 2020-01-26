@@ -18,11 +18,8 @@ struct RequestSummary {
 }
 
 fn main() -> Result<()> {
-    let config = Arc::new(Config::new(
-        100,
-        10,
-        String::from("http://127.0.0.1:8080/api/task"),
-    ));
+    let loaded_config = Config::load("target/debug/config.toml")?;
+    let config = Arc::new(loaded_config);
 
     let mut rt = tokio::runtime::Builder::new()
         .threaded_scheduler()
