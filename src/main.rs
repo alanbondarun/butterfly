@@ -1,5 +1,8 @@
+use crate::config::Config;
 use crate::statistics::{CategoryStats, ContinuousValueStats};
+use std::sync::Arc;
 
+mod config;
 mod statistics;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
@@ -15,19 +18,27 @@ struct RequestSummary {
 }
 
 fn main() -> Result<()> {
-    let total_users = 100;
-    let concurrent_users = 10;
+    let config = Arc::new(Config::new(
+        100,
+        10,
+        String::from("http://127.0.0.1:8080/api/task"),
+    ));
 
     let mut rt = tokio::runtime::Builder::new()
         .threaded_scheduler()
-        .core_threads(concurrent_users)
-        .max_threads(concurrent_users)
+        .core_threads(config.concurrent_users())
+        .max_threads(config.concurrent_users())
         .enable_all()
         .build()?;
     rt.block_on(async {
         let futures = std::iter::repeat(())
-            .take(total_users)
-            .map(|_| tokio::spawn(async move { make_request().await }))
+            .take(config.total_users())
+            .map(|_| {
+                let config_copy = config.clone();
+                tokio::spawn(
+                    async move { make_request(config_copy.api_endpoint()).await },
+                )
+            })
             .collect::<Vec<tokio::task::JoinHandle<Result<RequestResult>>>>();
 
         let mut results: Vec<RequestResult> = vec![];
@@ -57,8 +68,8 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-async fn make_request() -> Result<RequestResult> {
-    let endpoint: hyper::Uri = "http://127.0.0.1:8080/api/task".parse()?;
+async fn make_request(endpoint: &str) -> Result<RequestResult> {
+    let endpoint: hyper::Uri = endpoint.parse()?;
 
     let client = hyper::Client::new();
 
