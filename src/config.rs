@@ -15,8 +15,7 @@ struct Facts {
 impl Config {
     pub fn load(file_path: &str) -> crate::Result<Config> {
         let content = std::fs::read_to_string(file_path)?;
-        toml::from_str(&content)
-            .map_err(|err| err.into())
+        toml::from_str(&content).map_err(|err| err.into())
     }
 
     pub fn total_users(&self) -> usize {
