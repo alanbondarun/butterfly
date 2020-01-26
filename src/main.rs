@@ -21,6 +21,7 @@ fn main() -> Result<()> {
     let mut rt = tokio::runtime::Builder::new()
         .threaded_scheduler()
         .core_threads(concurrent_users)
+        .max_threads(concurrent_users)
         .enable_all()
         .build()?;
     rt.block_on(async {
