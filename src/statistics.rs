@@ -32,6 +32,18 @@ impl ContinuousValueStats {
             percentile_90th: elements[(elements.len() as f64 * 0.9).floor() as usize],
         }
     }
+
+    pub fn mean(&self) -> f64 {
+        self.mean
+    }
+
+    pub fn median(&self) -> f64 {
+        self.median
+    }
+
+    pub fn percentile_90th(&self) -> f64 {
+        self.percentile_90th
+    }
 }
 
 pub struct CategoryStats<T: std::cmp::Eq + std::hash::Hash> {
@@ -46,7 +58,7 @@ impl<T: std::cmp::Eq + std::hash::Hash> Default for CategoryStats<T> {
     }
 }
 
-impl<T: std::cmp::Eq + std::hash::Hash> CategoryStats<T> {
+impl<T: std::cmp::Eq + std::hash::Hash + std::fmt::Display> CategoryStats<T> {
     pub fn new(elements: Vec<T>) -> Self {
         let mut histogram = HashMap::new();
         for element in elements {
@@ -57,6 +69,14 @@ impl<T: std::cmp::Eq + std::hash::Hash> CategoryStats<T> {
         }
 
         CategoryStats { histogram }
+    }
+
+    pub fn histogram_as_str(&self) -> String {
+        self.histogram
+            .iter()
+            .map(|(element, count)| format!("[{}]: {}", element, count))
+            .collect::<Vec<String>>()
+            .join(", ")
     }
 }
 

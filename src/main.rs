@@ -37,13 +37,20 @@ fn main() -> Result<()> {
 
         let summary = RequestSummary {
             status_code: CategoryStats::new(
-                results
-                    .iter()
-                    .map(|result| result.status_code)
-                    .collect::<Vec<hyper::StatusCode>>(),
+                results.iter().map(|result| result.status_code).collect(),
             ),
-            response_time: ContinuousValueStats::default(),
+            response_time: ContinuousValueStats::new(
+                results.iter().map(|result| result.response_time).collect(),
+            ),
         };
+
+        println!("status_code: {}", summary.status_code.histogram_as_str());
+        println!("response_time_mean: {}", summary.response_time.mean());
+        println!("response_time_median: {}", summary.response_time.median());
+        println!(
+            "response_time_90th_percentile: {}",
+            summary.response_time.percentile_90th()
+        );
     });
 
     Ok(())
