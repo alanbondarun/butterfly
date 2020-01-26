@@ -1,8 +1,17 @@
+use crate::statistics::{CategoryStats, ContinuousValueStats};
+
+mod statistics;
+
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 struct RequestResult {
-    _status_code: hyper::StatusCode,
-    _response_time: f64,
+    status_code: hyper::StatusCode,
+    response_time: f64,
+}
+
+struct RequestSummary {
+    status_code: CategoryStats<hyper::StatusCode>,
+    response_time: ContinuousValueStats,
 }
 
 fn main() -> Result<()> {
@@ -20,9 +29,21 @@ fn main() -> Result<()> {
             .map(|_| tokio::spawn(async move { make_request().await }))
             .collect::<Vec<tokio::task::JoinHandle<Result<RequestResult>>>>();
 
+        let mut results: Vec<RequestResult> = vec![];
         for future in futures {
-            future.await.expect("Error").expect("Error");
+            let result = future.await.expect("Error").expect("Error");
+            results.push(result);
         }
+
+        let summary = RequestSummary {
+            status_code: CategoryStats::new(
+                results
+                    .iter()
+                    .map(|result| result.status_code)
+                    .collect::<Vec<hyper::StatusCode>>(),
+            ),
+            response_time: ContinuousValueStats::default(),
+        };
     });
 
     Ok(())
@@ -38,7 +59,7 @@ async fn make_request() -> Result<RequestResult> {
     let elapsed_time = now.elapsed()?.as_secs_f64();
 
     Ok(RequestResult {
-        _status_code: response.status(),
-        _response_time: elapsed_time,
+        status_code: response.status(),
+        response_time: elapsed_time,
     })
 }
