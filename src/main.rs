@@ -68,7 +68,8 @@ fn main() -> Result<()> {
                     .iter()
                     .filter(|result| result.status_code.is_ok())
                     .map(|result| result.response_time)
-                    .collect(),
+                    .collect::<Vec<f64>>()
+                    .as_ref(),
             ),
         };
 
