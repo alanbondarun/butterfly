@@ -9,6 +9,7 @@ pub struct Config {
 struct Facts {
     total_users: usize,
     concurrent_users: usize,
+    max_requests_per_second: f64,
     api_endpoint: String,
 }
 
@@ -24,6 +25,10 @@ impl Config {
 
     pub fn concurrent_users(&self) -> usize {
         self.facts.concurrent_users
+    }
+
+    pub fn max_requests_per_second(&self) -> f64 {
+        self.facts.max_requests_per_second
     }
 
     pub fn api_endpoint(&self) -> &str {

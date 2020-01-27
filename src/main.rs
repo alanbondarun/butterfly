@@ -1,6 +1,7 @@
 use crate::config::Config;
 use crate::statistics::{CategoryStats, ContinuousValueStats};
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::stream::StreamExt;
 
 mod config;
@@ -29,13 +30,16 @@ fn main() -> Result<()> {
         .enable_all()
         .build()?;
     rt.block_on(async {
-        let mut futures = tokio::stream::iter(
-            std::iter::repeat(()).take(config.total_users()).map(|_| {
-                let config_copy = config.clone();
-                tokio::spawn(
-                    async move { make_request(config_copy.api_endpoint()).await },
-                )
-            }),
+        let mut futures = tokio::time::throttle(
+            Duration::from_secs_f64(1.0 / config.max_requests_per_second()),
+            tokio::stream::iter(std::iter::repeat(()).take(config.total_users()).map(
+                |_| {
+                    let config_copy = config.clone();
+                    tokio::spawn(async move {
+                        make_request(config_copy.api_endpoint()).await
+                    })
+                },
+            )),
         );
 
         let mut results: Vec<RequestResult> = vec![];
