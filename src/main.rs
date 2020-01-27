@@ -8,12 +8,12 @@ mod statistics;
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 struct RequestResult {
-    status_code: hyper::StatusCode,
+    status_code: Result<hyper::StatusCode>,
     response_time: f64,
 }
 
 struct RequestSummary {
-    status_code: CategoryStats<hyper::StatusCode>,
+    status_code: CategoryStats<String>,
     response_time: ContinuousValueStats,
 }
 
@@ -46,10 +46,20 @@ fn main() -> Result<()> {
 
         let summary = RequestSummary {
             status_code: CategoryStats::new(
-                results.iter().map(|result| result.status_code).collect(),
+                results
+                    .iter()
+                    .map(|result| match &result.status_code {
+                        Ok(code) => format!("{}", code),
+                        Err(err) => format!("{}", err),
+                    })
+                    .collect(),
             ),
             response_time: ContinuousValueStats::new(
-                results.iter().map(|result| result.response_time).collect(),
+                results
+                    .iter()
+                    .filter(|result| result.status_code.is_ok())
+                    .map(|result| result.response_time)
+                    .collect(),
             ),
         };
 
@@ -71,11 +81,13 @@ async fn make_request(endpoint: &str) -> Result<RequestResult> {
     let client = hyper::Client::new();
 
     let now = std::time::SystemTime::now();
-    let response = client.get(endpoint).await?;
+    let request_result = client.get(endpoint).await;
     let elapsed_time = now.elapsed()?.as_secs_f64();
 
     Ok(RequestResult {
-        status_code: response.status(),
+        status_code: request_result
+            .map(|response| response.status())
+            .map_err(|err| err.into()),
         response_time: elapsed_time,
     })
 }
