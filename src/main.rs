@@ -34,9 +34,15 @@ fn main() -> Result<()> {
             Duration::from_secs_f64(1.0 / config.max_requests_per_second()),
             tokio::stream::iter(std::iter::repeat(()).take(config.total_users()).map(
                 |_| {
+                    let full_endpoint = config.target_address().to_owned()
+                        + config.task_definitions()[0].api_endpoint();
                     let config_copy = config.clone();
                     tokio::spawn(async move {
-                        make_request(config_copy.api_endpoint()).await
+                        make_request(
+                            &full_endpoint,
+                            config_copy.task_definitions()[0].method(),
+                        )
+                        .await
                     })
                 },
             )),
@@ -85,13 +91,17 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-async fn make_request(endpoint: &str) -> Result<RequestResult> {
+async fn make_request(endpoint: &str, method: &str) -> Result<RequestResult> {
     let endpoint: hyper::Uri = endpoint.parse()?;
+    let request = hyper::Request::builder()
+        .uri(endpoint)
+        .method(method)
+        .body(hyper::Body::empty())?;
 
     let client = hyper::Client::new();
 
     let now = std::time::SystemTime::now();
-    let request_result = client.get(endpoint).await;
+    let request_result = client.request(request).await;
     let elapsed_time = now.elapsed()?.as_secs_f64();
 
     Ok(RequestResult {

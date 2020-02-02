@@ -3,6 +3,7 @@ use serde_derive::Deserialize;
 #[derive(Deserialize)]
 pub struct Config {
     facts: Facts,
+    tasks: Vec<TaskDefinition>,
 }
 
 #[derive(Deserialize)]
@@ -10,7 +11,13 @@ struct Facts {
     total_users: usize,
     concurrent_users: usize,
     max_requests_per_second: f64,
+    target_address: String,
+}
+
+#[derive(Deserialize)]
+pub struct TaskDefinition {
     api_endpoint: String,
+    method: String,
 }
 
 impl Config {
@@ -31,7 +38,21 @@ impl Config {
         self.facts.max_requests_per_second
     }
 
+    pub fn target_address(&self) -> &str {
+        &self.facts.target_address
+    }
+
+    pub fn task_definitions(&self) -> &Vec<TaskDefinition> {
+        &self.tasks
+    }
+}
+
+impl TaskDefinition {
     pub fn api_endpoint(&self) -> &str {
-        &self.facts.api_endpoint
+        &self.api_endpoint
+    }
+
+    pub fn method(&self) -> &str {
+        &self.method
     }
 }
