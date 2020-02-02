@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - name: Install coverage tools
+      run: cargo install cargo-tarpaulin
     - name: Build
       run: cargo build --verbose
     - name: Run tests
@@ -15,3 +17,9 @@ jobs:
       run: cargo fmt --verbose -- --check
     - name: Linting
       run: cargo clippy --verbose -- -D warnings
+    - name: Calculate coverage
+      run: cargo tarpaulin --out Xml
+    - name: Upload coverage reports to Codecov
+      run: bash <(curl -s https://codecov.io/bash)
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
