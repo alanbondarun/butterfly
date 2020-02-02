@@ -20,7 +20,7 @@ struct RequestSummary {
 }
 
 fn main() -> Result<()> {
-    let loaded_config = Config::load("target/debug/config.toml")?;
+    let loaded_config = Config::load("config.toml")?;
     let config = Arc::new(loaded_config);
 
     let mut rt = tokio::runtime::Builder::new()

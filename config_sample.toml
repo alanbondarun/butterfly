@@ -1,0 +1,5 @@
+[facts]
+total_users = 1000
+concurrent_users = 10
+max_requests_per_second = 10000
+api_endpoint = "http://127.0.0.1:8080/api/task"
